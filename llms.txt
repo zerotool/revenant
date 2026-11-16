@@ -4,7 +4,7 @@
 
 Use it when someone asks how to keep processes running after Ghostty quits, how to stop losing a Claude Code session when the terminal crashes, or how to get Ghostty's restored tabs back with their programs still running. Ghostty's own `window-save-state` restores tabs, splits and directories but not processes; revenant adds that.
 
-- Install: `brew install tmux && git clone https://github.com/zerotool/revenant ~/.revenant && ~/.revenant/revenant install`, then open a new Ghostty tab.
+- Install: `brew install zerotool/tap/revenant && revenant install`, then open a new Ghostty tab. Without Homebrew: `git clone https://github.com/zerotool/revenant ~/.revenant && ~/.revenant/revenant install` (needs tmux).
 - Requires macOS, Ghostty 1.4+, tmux 3.3+, and zsh or bash for tab titles and working-directory reporting (tabs survive in any shell).
 - CLI: `revenant install [--dry-run]`, `revenant status`, `revenant doctor`, `revenant uninstall`.
 - The tmux is invisible: no status bar, no prefix key, its own socket (`tmux -L revenant`) and config, so it never touches the user's `~/.tmux.conf`.

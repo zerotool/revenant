@@ -57,6 +57,15 @@ check "uninstall restores the Ghostty config" "cmp -s '$t/ghostty.conf' '$t/ghos
 check "uninstall restores the profile" "cmp -s '$t/zshrc' '$t/zshrc.orig'"
 check "uninstall removes the CLI link" "[[ ! -e '$t/home/.local/bin/revenant' ]]"
 
+echo "package-manager install (REVENANT_ROOT)"
+ln -s "$root" "$t/opt-revenant"
+REVENANT_ROOT="$t/opt-revenant" run install >"$t/out" 2>&1
+check "config keeps the stable root, not the resolved one" "grep -qxF 'command = $t/opt-revenant/libexec/attach' '$t/ghostty.conf'"
+check "no CLI link: the package manager owns the PATH entry" "[[ ! -e '$t/home/.local/bin/revenant' ]]"
+REVENANT_ROOT="$t/opt-revenant" run uninstall >"$t/out" 2>&1
+check "uninstall restores the Ghostty config" "cmp -s '$t/ghostty.conf' '$t/ghostty.orig'"
+check "--version prints the version" "'$root/revenant' --version | grep -qE '^revenant [0-9]+\.[0-9]+\.[0-9]+$'"
+
 echo "bash integration"
 for b in /bin/bash "$(command -v bash)"; do
 	check "$($b -c 'echo bash $BASH_VERSION') hooks the prompt" \

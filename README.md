@@ -17,6 +17,7 @@
   <img alt="zsh and bash" src="https://img.shields.io/badge/shell-zsh%20%7C%20bash-4eaa25?logo=gnubash&logoColor=white">
   <img alt="Only dependency: tmux" src="https://img.shields.io/badge/deps-tmux%20only-informational">
   <img alt="MIT license" src="https://img.shields.io/badge/license-MIT-blue">
+  <a href="https://github.com/zerotool/revenant/actions/workflows/test.yml"><img alt="tests" src="https://github.com/zerotool/revenant/actions/workflows/test.yml/badge.svg"></a>
 </p>
 
 You have six tabs open. Claude Code is forty minutes into a refactor. `npm run dev` is warm, an ssh session is
@@ -36,16 +37,26 @@ it likes, and when it restores a tab, revenant hands that tab back exactly the s
 ## Install
 
 ```sh
-brew install tmux
+brew install zerotool/tap/revenant
+revenant install
+```
+
+<details>
+<summary>Without Homebrew</summary>
+
+```sh
+brew install tmux        # or MacPorts / Nix, anything that puts tmux 3.3+ on disk
 git clone https://github.com/zerotool/revenant ~/.revenant
 ~/.revenant/revenant install
 ```
+
+</details>
 
 Open a new Ghostty tab. That's it. Now try the trick: run `top`, quit Ghostty with **⌘Q**, open it again.
 `top` never stopped.
 
 `install` adds a marked block to your Ghostty config and one line to your shell profile, backs up both first,
-and links the `revenant` CLI into `~/.local/bin`. Run it twice, nothing doubles; `revenant uninstall` takes it
+and (for a git checkout) links the `revenant` CLI into `~/.local/bin`. Run it twice, nothing doubles; `revenant uninstall` takes it
 all back out. Not sure? `revenant install --dry-run` shows the diff and writes nothing.
 
 > [!NOTE]
@@ -53,7 +64,7 @@ all back out. Not sure? `revenant install --dry-run` shows the diff and writes n
 > asks "which tab am I?" and finds its session again.
 
 **Needs:** macOS · Ghostty 1.4+ (tested on 1.4.0) · tmux 3.3+ (tested on 3.8) · zsh or bash.
-**Update:** `git -C ~/.revenant pull`, nothing to reinstall.
+**Update:** `brew upgrade revenant`, or `git -C ~/.revenant pull`. Nothing to reinstall either way.
 
 ## Who it's for
 
@@ -163,8 +174,9 @@ sequenceDiagram
 
 ## Configuration
 
-Defaults are fine. If not, these are read from the environment Ghostty starts with
-(`launchctl setenv NAME value`, then restart Ghostty):
+Defaults are fine. If not, set any of these with Ghostty's `env` option (Ghostty 1.2+) in its config, for
+example `env = REVENANT_REAP_DELAY=30`. The revenant server reads them when it starts, so they apply once
+every tab has been closed (or after `tmux -L revenant kill-server`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -214,6 +226,11 @@ Each split is its own session and comes back to its own spot.
 **What about scrollback?**
 tmux keeps 50 000 lines per tab. Scroll with the wheel; any key returns you to the prompt.
 
+**Why not Ghostty's native scrollback, like ghostmux does?**
+Turning off tmux's alternate screen hands scrolling back to Ghostty, which is lovely for plain shell output.
+It also breaks scrolling in live full-screen apps (ghostmux says so itself: Claude Code, vim, lazygit), and
+those are exactly what revenant exists to keep alive. tmux's scrollback works for both.
+
 **fish? nushell?**
 Tabs survive in any shell. Titles and "new tab here" need a small integration script, and only zsh and bash have
 one so far: `shell/revenant.<shell>`, PRs welcome.
@@ -239,7 +256,8 @@ Sessions that are already running keep running until you close them. To end ever
 ## Development
 
 `test/smoke.sh` lints everything with bash 3.2 and shellcheck, runs an install/uninstall round trip against
-throwaway files, and checks the reaper on a throwaway tmux server. It never touches your real setup.
+throwaway files, and checks the reaper on a throwaway tmux server. It never touches your real setup, and CI runs
+it on macOS for every push.
 
 ---
 

@@ -20,14 +20,22 @@ and links this CLI into ~/.local/bin. Point it elsewhere with REVENANT_GHOSTTY_C
 EOF
 }
 
-# Resolve symlinks, so a `revenant` linked into ~/.local/bin still finds its checkout.
-src=${BASH_SOURCE[0]}
-while [[ -L $src ]]; do
-	dir=$(cd -P "$(dirname "$src")" && pwd)
-	src=$(readlink "$src")
-	[[ $src == /* ]] || src=$dir/$src
-done
-root=$(cd -P "$(dirname "$src")" && pwd)
+version=0.1.1
+
+# A package manager passes a stable root (Homebrew: /opt/homebrew/opt/revenant), because the resolved
+# path names a version directory that the next upgrade deletes. A checkout resolves its own symlinks, so
+# a `revenant` linked into ~/.local/bin still finds it.
+if [[ -n ${REVENANT_ROOT:-} ]]; then
+	root=$REVENANT_ROOT
+else
+	src=${BASH_SOURCE[0]}
+	while [[ -L $src ]]; do
+		dir=$(cd -P "$(dirname "$src")" && pwd)
+		src=$(readlink "$src")
+		[[ $src == /* ]] || src=$dir/$src
+	done
+	root=$(cd -P "$(dirname "$src")" && pwd)
+fi
 libexec=$root/libexec
 # shellcheck source=libexec/lib.sh
 source "$libexec/lib.sh"
@@ -205,7 +213,9 @@ confirm-close-surface = false"
 		note "the directory of a new tab need one (PRs welcome: shell/revenant.<shell>)"
 	fi
 
-	if [[ :$PATH: == *:$bin_dir:* ]]; then
+	if [[ -n ${REVENANT_ROOT:-} ]]; then
+		: # installed by a package manager, which already put revenant on the PATH
+	elif [[ :$PATH: == *:$bin_dir:* ]]; then
 		if ((dry_run)); then
 			echo "  ~ would link $bin_dir/revenant → $root/revenant"
 		elif [[ -e $bin_dir/revenant && $(resolve "$bin_dir/revenant") != "$root/revenant" ]]; then
@@ -331,6 +341,7 @@ install)
 uninstall) cmd_uninstall ;;
 doctor) cmd_doctor ;;
 status | ls) cmd_status ;;
+version | -v | --version) echo "revenant $version" ;;
 help | -h | --help) usage ;;
 *)
 	usage >&2

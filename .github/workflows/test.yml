@@ -1,0 +1,15 @@
+name: test
+
+on:
+    push:
+    pull_request:
+
+jobs:
+    smoke:
+        runs-on: macos-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Install tmux and shellcheck
+              run: brew install tmux shellcheck
+            - name: Smoke test (the reaper part needs a running Ghostty and is skipped here)
+              run: test/smoke.sh
