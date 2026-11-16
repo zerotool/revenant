@@ -1,20 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="820" height="360" viewBox="0 0 820 360" role="img" aria-label="Claude Code works in a Ghostty tab, Ghostty quits, and the restored tab shows Claude Code still working">
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="360" viewBox="0 0 820 360" role="img" aria-label="Without revenant, quitting Ghostty blows the Claude Code tab to pieces; with revenant, Ghostty quits and the restored tab shows Claude Code still working">
   <style>
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
     .tab { font-family: ui-sans-serif, -apple-system, "Segoe UI", sans-serif; font-size: 12.5px; fill: #a9b1d6; }
-    .dim { fill: #6b7194; } .fg { fill: #d5daf2; } .cyan { fill: #7ef5d8; } .violet { fill: #c4a7ff; } .amber { fill: #ffc777; }
-    .s2, .s3 { opacity: 0; }
-    .s1 { animation: s1 11s infinite; }
-    .s2 { animation: s2 11s infinite; }
-    .s3 { animation: s3 11s infinite; }
-    @keyframes s1 { 0%, 29% { opacity: 1; } 32%, 97% { opacity: 0; } 100% { opacity: 1; } }
-    @keyframes s2 { 0%, 30% { opacity: 0; } 34%, 53% { opacity: 1; } 57%, 100% { opacity: 0; } }
-    @keyframes s3 { 0%, 55% { opacity: 0; } 59%, 95% { opacity: 1; } 99%, 100% { opacity: 0; } }
+    .dim { fill: #6b7194; } .fg { fill: #d5daf2; } .cyan { fill: #7ef5d8; } .amber { fill: #ffc777; } .red { fill: #ff757f; }
+
+    /* one 18 s loop: A plain Ghostty → B ⌘Q blows it up → C take two, with revenant → D ⌘Q, the ghost holds on → E back */
+    .sB, .sBtext, .sC, .sD, .sE, .shard, .flash, .spark { opacity: 0; }
+    .sA { animation: sA 18s infinite; }
+    .sB { animation: sB 18s infinite; }
+    .sBtext { animation: sBtext 18s infinite; }
+    .sC { animation: sC 18s infinite; }
+    .sD { animation: sD 18s infinite; }
+    .sE { animation: sE 18s infinite; }
+    @keyframes sA { 0%, 21.9% { opacity: 1; } 22%, 98.5% { opacity: 0; } 100% { opacity: 1; } }
+    @keyframes sB { 0%, 21.9% { opacity: 0; } 22%, 38% { opacity: 1; } 39.5%, 100% { opacity: 0; } }
+    @keyframes sBtext { 0%, 26% { opacity: 0; } 28.5%, 38% { opacity: 1; } 39.5%, 100% { opacity: 0; } }
+    @keyframes sC { 0%, 39% { opacity: 0; } 40.5%, 55% { opacity: 1; } 56.5%, 100% { opacity: 0; } }
+    @keyframes sD { 0%, 56% { opacity: 0; } 57.5%, 69% { opacity: 1; } 70.5%, 100% { opacity: 0; } }
+    @keyframes sE { 0%, 70% { opacity: 0; } 71.5%, 97% { opacity: 1; } 98.5%, 100% { opacity: 0; } }
+
+    /* the window cracks along the shard edges, holds for a beat, then flies apart */
+    .shard, .flash, .spark { transform-box: fill-box; transform-origin: center; }
+    .shard polygon.body { fill: #1a1b26; stroke: #ff9e64; stroke-width: 2; }
+    .sh1 { animation: sh1 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    .sh2 { animation: sh2 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    .sh3 { animation: sh3 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    .sh4 { animation: sh4 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    .sh5 { animation: sh5 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    .sh6 { animation: sh6 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    .sh7 { animation: sh7 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    .sh8 { animation: sh8 18s cubic-bezier(.15, .7, .3, 1) infinite; }
+    @keyframes sh1 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(-170px, -130px) rotate(-38deg) scale(.8); } }
+    @keyframes sh2 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(-40px, -190px) rotate(22deg) scale(.8); } }
+    @keyframes sh3 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(60px, -180px) rotate(-18deg) scale(.8); } }
+    @keyframes sh4 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(190px, -120px) rotate(40deg) scale(.8); } }
+    @keyframes sh5 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(-180px, 140px) rotate(30deg) scale(.8); } }
+    @keyframes sh6 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(-50px, 200px) rotate(-26deg) scale(.8); } }
+    @keyframes sh7 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(70px, 190px) rotate(18deg) scale(.8); } }
+    @keyframes sh8 { 0%, 21.9% { opacity: 0; transform: none; } 22%, 23.5% { opacity: 1; transform: none; } 34%, 100% { opacity: 0; transform: translate(190px, 150px) rotate(-42deg) scale(.8); } }
+
+    .flash { animation: flash 18s ease-out infinite; }
+    @keyframes flash { 0%, 23.4% { opacity: 0; transform: scale(.1); } 23.6% { opacity: .95; transform: scale(1); } 28%, 100% { opacity: 0; transform: scale(9); } }
+    .sp1 { animation: sp1 18s ease-out infinite; } .sp2 { animation: sp2 18s ease-out infinite; } .sp3 { animation: sp3 18s ease-out infinite; }
+    .sp4 { animation: sp4 18s ease-out infinite; } .sp5 { animation: sp5 18s ease-out infinite; } .sp6 { animation: sp6 18s ease-out infinite; }
+    @keyframes sp1 { 0%, 23.4% { opacity: 0; transform: none; } 23.6% { opacity: 1; transform: none; } 31%, 100% { opacity: 0; transform: translate(-260px, -60px); } }
+    @keyframes sp2 { 0%, 23.4% { opacity: 0; transform: none; } 23.6% { opacity: 1; transform: none; } 31%, 100% { opacity: 0; transform: translate(240px, -90px); } }
+    @keyframes sp3 { 0%, 23.4% { opacity: 0; transform: none; } 23.6% { opacity: 1; transform: none; } 31%, 100% { opacity: 0; transform: translate(-120px, 150px); } }
+    @keyframes sp4 { 0%, 23.4% { opacity: 0; transform: none; } 23.6% { opacity: 1; transform: none; } 31%, 100% { opacity: 0; transform: translate(150px, 140px); } }
+    @keyframes sp5 { 0%, 23.4% { opacity: 0; transform: none; } 23.6% { opacity: 1; transform: none; } 31%, 100% { opacity: 0; transform: translate(-30px, -170px); } }
+    @keyframes sp6 { 0%, 23.4% { opacity: 0; transform: none; } 23.6% { opacity: 1; transform: none; } 31%, 100% { opacity: 0; transform: translate(300px, 30px); } }
+
     .float { animation: float 2.2s ease-in-out infinite; }
     @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
     .cursor { animation: blink 1s steps(1) infinite; }
     @keyframes blink { 50% { opacity: 0; } }
-    @media (prefers-reduced-motion: reduce) { .s1, .s2, .s3, .float, .cursor { animation: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .sA, .sB, .sBtext, .sC, .sD, .sE, .shard, .flash, .spark, .float, .cursor { animation: none; }
+    }
   </style>
 
   <!-- Ghostty window -->
@@ -25,17 +67,58 @@
   <text class="tab" x="211" y="27" text-anchor="middle">✻ claude · ~/shop</text>
   <text class="tab" x="446" y="27" text-anchor="middle" opacity="0.6">npm run dev · ~/shop/web</text>
 
-  <!-- 1. Claude Code is twelve minutes into a long job -->
-  <g class="s1">
+  <!-- A. Plain Ghostty: Claude Code is twelve minutes into a long job -->
+  <g class="sA">
     <text class="mono" x="26" y="86" xml:space="preserve"><tspan class="cyan">~/shop ❯</tspan><tspan class="fg"> claude "move billing to the new payments API"</tspan></text>
     <text class="mono" x="26" y="118" xml:space="preserve"><tspan class="amber">  ✻ Migrating…</tspan><tspan class="dim"> (12m 04s · 38 files changed · esc to interrupt)</tspan></text>
     <text class="mono" x="26" y="146" xml:space="preserve"><tspan class="dim">  └  Editing src/billing/invoice.ts</tspan></text>
     <text class="mono" x="26" y="200" xml:space="preserve"><tspan class="dim">  &gt; </tspan><tspan class="fg cursor">█</tspan></text>
-    <text class="mono dim" x="26" y="330" xml:space="preserve">  …and then you hit ⌘Q instead of ⌘W.</text>
+    <text class="mono dim" x="26" y="330" xml:space="preserve">  Plain Ghostty. Then you hit ⌘Q instead of ⌘W…</text>
   </g>
 
-  <!-- 2. Ghostty is gone; the processes are not -->
-  <g class="s2">
+  <!-- B. ⌘Q without revenant: the tab blows up and takes the work with it -->
+  <g class="sB">
+    <rect x="1" y="1" width="818" height="358" rx="14" fill="#0b0b12"/>
+  </g>
+  <g class="shard sh1"><polygon class="body" points="0,0 230,0 200,160 0,185"/><polygon points="0,0 230,0 225,44 0,44" fill="#16161e"/><circle cx="24" cy="22" r="6.5" fill="#ff5f57"/><circle cx="46" cy="22" r="6.5" fill="#febc2e"/><circle cx="68" cy="22" r="6.5" fill="#28c840"/><rect x="26" y="78" width="72" height="8" rx="3" fill="#7ef5d8"/><rect x="44" y="110" width="104" height="8" rx="3" fill="#ffc777"/></g>
+  <g class="shard sh2"><polygon class="body" points="230,0 440,0 420,175 200,160"/><polygon points="230,0 440,0 436,44 225,44" fill="#16161e"/><rect x="230" y="9" width="96" height="27" rx="4" fill="#24283b"/><rect x="230" y="78" width="180" height="8" rx="3" fill="#d5daf2" opacity=".7"/><rect x="238" y="110" width="160" height="8" rx="3" fill="#6b7194"/></g>
+  <g class="shard sh3"><polygon class="body" points="440,0 600,0 630,165 420,175"/><polygon points="440,0 600,0 603,44 436,44" fill="#16161e"/><rect x="440" y="78" width="96" height="8" rx="3" fill="#d5daf2" opacity=".7"/><rect x="436" y="110" width="170" height="8" rx="3" fill="#6b7194"/></g>
+  <g class="shard sh4"><polygon class="body" points="600,0 820,0 820,180 630,165"/><polygon points="600,0 820,0 820,44 603,44" fill="#16161e"/><rect x="612" y="110" width="66" height="8" rx="3" fill="#6b7194"/></g>
+  <g class="shard sh5"><polygon class="body" points="0,185 200,160 215,360 0,360"/><rect x="44" y="190" width="14" height="10" rx="2" fill="#6b7194"/><rect x="64" y="186" width="10" height="17" fill="#d5daf2"/><rect x="44" y="138" width="40" height="8" rx="3" fill="#6b7194"/></g>
+  <g class="shard sh6"><polygon class="body" points="200,160 420,175 445,360 215,360"/><rect x="226" y="320" width="150" height="7" rx="3" fill="#6b7194" opacity=".6"/></g>
+  <g class="shard sh7"><polygon class="body" points="420,175 630,165 600,360 445,360"/></g>
+  <g class="shard sh8"><polygon class="body" points="630,165 820,180 820,360 600,360"/></g>
+  <defs>
+    <radialGradient id="boom">
+      <stop offset="0" stop-color="#fffbe8"/>
+      <stop offset=".3" stop-color="#ffd27a"/>
+      <stop offset=".62" stop-color="#ff9e64" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#ff757f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle class="flash" cx="410" cy="180" r="40" fill="url(#boom)"/>
+  <g fill="#ff9e64">
+    <circle class="spark sp1" cx="410" cy="180" r="4"/><circle class="spark sp2" cx="410" cy="180" r="3"/><circle class="spark sp3" cx="410" cy="180" r="4"/>
+    <circle class="spark sp4" cx="410" cy="180" r="3"/><circle class="spark sp5" cx="410" cy="180" r="3.5"/><circle class="spark sp6" cx="410" cy="180" r="3"/>
+  </g>
+  <g class="sBtext">
+    <text class="mono amber" x="410" y="150" text-anchor="middle" style="font-size: 46px">💥 ⌘Q</text>
+    <text class="mono fg" x="410" y="210" text-anchor="middle">Ghostty quit, and took everything with it.</text>
+    <text class="mono red" x="410" y="244" text-anchor="middle">claude · npm run dev · ssh: killed.</text>
+    <text class="mono dim" x="410" y="274" text-anchor="middle">12 minutes of migration, gone.</text>
+  </g>
+
+  <!-- C. Take two, with revenant installed -->
+  <g class="sC">
+    <text class="mono" x="26" y="86" xml:space="preserve"><tspan class="cyan">~/shop ❯</tspan><tspan class="fg"> claude "move billing to the new payments API"</tspan></text>
+    <text class="mono" x="26" y="118" xml:space="preserve"><tspan class="amber">  ✻ Migrating…</tspan><tspan class="dim"> (12m 04s · 38 files changed · esc to interrupt)</tspan></text>
+    <text class="mono" x="26" y="146" xml:space="preserve"><tspan class="dim">  └  Editing src/billing/invoice.ts</tspan></text>
+    <text class="mono" x="26" y="200" xml:space="preserve"><tspan class="dim">  &gt; </tspan><tspan class="fg cursor">█</tspan></text>
+    <text class="mono cyan" x="26" y="330" xml:space="preserve">  Take two, with revenant installed 👻  ⌘Q…</text>
+  </g>
+
+  <!-- D. Ghostty is gone; the processes are not -->
+  <g class="sD">
     <rect x="1" y="1" width="818" height="358" rx="14" fill="#0b0b12"/>
     <g transform="translate(385 62)">
       <g class="float">
@@ -49,8 +132,8 @@
     <text class="mono dim" x="410" y="270" text-anchor="middle">revenant tmux server: 2 sessions, waiting for their tabs</text>
   </g>
 
-  <!-- 3. Ghostty is back, and so is the job -->
-  <g class="s3">
+  <!-- E. Ghostty is back, and so is the job -->
+  <g class="sE">
     <text class="mono" x="26" y="86" xml:space="preserve"><tspan class="cyan">~/shop ❯</tspan><tspan class="fg"> claude "move billing to the new payments API"</tspan></text>
     <text class="mono" x="26" y="118" xml:space="preserve"><tspan class="amber">  ✻ Migrating…</tspan><tspan class="dim"> (12m 37s · 41 files changed · esc to interrupt)</tspan></text>
     <text class="mono" x="26" y="146" xml:space="preserve"><tspan class="dim">  └  Editing src/billing/refund.ts</tspan></text>

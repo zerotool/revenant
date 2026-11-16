@@ -31,7 +31,7 @@ them**. Every one of those processes is dead.
 it likes, and when it restores a tab, revenant hands that tab back exactly the session it had.
 
 <p align="center">
-  <img src="assets/demo.svg" alt="Claude Code works in a tab, Ghostty quits, the restored tab shows Claude Code still working" width="820">
+  <img src="assets/demo.svg" alt="Without revenant, quitting Ghostty blows a Claude Code tab to pieces; with revenant, Ghostty quits and the restored tab shows Claude Code still working" width="820">
 </p>
 
 ## Install
