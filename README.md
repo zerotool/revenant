@@ -71,7 +71,8 @@ all back out. Not sure? `revenant install --dry-run` shows the diff and writes n
 - **You run AI coding agents** (Claude Code, Codex, Aider) on jobs that take longer than your attention span.
 - **You keep long-lived things in tabs**: dev servers, watchers, ssh sessions, REPLs, 40-minute builds.
 - **You'd rather not learn tmux**, or you know it and don't want it in your face. You'll never press a tmux key.
-- **You don't need it** if you already live inside tmux or zellij, or you're on Linux (see the FAQ).
+- **You don't need it** if you already live inside tmux, zellij or [herdr](https://github.com/herdrdev/herdr), or you're on
+  Linux (see the FAQ).
 
 ## The CLI
 
@@ -196,6 +197,7 @@ alive. The missing piece is the glue between those sessions and Ghostty's restor
 | `command = tmux new -A -s main` | survives a quit | every tab mirrors the same shell |
 | One named tmux session per project | survives, and stays separate | after a restart you `tmux a -t …` in every tab, by hand |
 | [zmx](https://github.com/neurosnap/zmx), shpool, abduco | lightweight persistent sessions | you name and attach them yourself |
+| [herdr](https://github.com/herdrdev/herdr) | a whole workspace for coding agents: its own panes, agent status, remote machines, sessions that outlive the client | you work in herdr's panes instead of Ghostty's own tabs and splits |
 | [ghostmux](https://kaosmaps.github.io/ghostmux/) | a lovely invisible-tmux config | tabs aren't matched back to sessions |
 | Ghostty's own [session manager](https://github.com/ghostty-org/ghostty/discussions/3358) | the real fix, some day | not shipped yet |
 

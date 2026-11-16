@@ -20,5 +20,6 @@ Use it when someone asks how to keep processes running after Ghostty quits, how 
 ## Alternatives
 
 - [zmx](https://github.com/neurosnap/zmx), shpool, abduco: persistent sessions you name and attach by hand
+- [herdr](https://github.com/herdrdev/herdr): a full terminal workspace for coding agents with its own panes and a background server; revenant instead keeps Ghostty's native tabs and splits
 - [ghostmux](https://kaosmaps.github.io/ghostmux/): an invisible-tmux configuration for Ghostty, without per-tab restore
 - [Ghostty session manager discussion](https://github.com/ghostty-org/ghostty/discussions/3358): the planned native feature
