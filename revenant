@@ -1,0 +1,339 @@
+#!/bin/bash
+# revenant: Ghostty tabs that come back from the dead, processes and all.
+# https://github.com/zerotool/revenant
+set -u
+
+usage() {
+	cat <<'EOF'
+
+  ┬─┐┌─┐┬  ┬┌─┐┌┐┌┌─┐┌┐┌┌┬┐
+  ├┬┘├┤ └┐┌┘├┤ │││├─┤│││ │
+  ┴└─└─┘ └┘ └─┘┘└┘┴ ┴┘└┘ ┴   Ghostty tabs that come back from the dead 👻
+
+  revenant install [--dry-run]   point Ghostty and your shell at revenant (backs up what it edits)
+  revenant uninstall             undo install; sessions that are running keep running
+  revenant doctor                check the setup, one line per check
+  revenant status                the sessions behind your tabs, and the ghosts waiting for theirs
+
+install edits the Ghostty config and your shell profile (~/.zshrc, or ~/.bash_profile for bash),
+and links this CLI into ~/.local/bin. Point it elsewhere with REVENANT_GHOSTTY_CONFIG and REVENANT_RC.
+EOF
+}
+
+# Resolve symlinks, so a `revenant` linked into ~/.local/bin still finds its checkout.
+src=${BASH_SOURCE[0]}
+while [[ -L $src ]]; do
+	dir=$(cd -P "$(dirname "$src")" && pwd)
+	src=$(readlink "$src")
+	[[ $src == /* ]] || src=$dir/$src
+done
+root=$(cd -P "$(dirname "$src")" && pwd)
+libexec=$root/libexec
+# shellcheck source=libexec/lib.sh
+source "$libexec/lib.sh"
+
+socket=${REVENANT_SOCKET:-revenant}
+begin='# >>> revenant >>>'
+end='# <<< revenant <<<'
+bin_dir=$HOME/.local/bin
+stamp=$(date +%Y%m%d-%H%M%S)
+dry_run=0
+fails=0
+
+if [[ -t 1 ]]; then
+	green=$'\033[32m' red=$'\033[31m' yellow=$'\033[33m' dim=$'\033[2m' reset=$'\033[0m'
+else
+	green='' red='' yellow='' dim='' reset=''
+fi
+ok() { printf '  %s✓%s %s\n' "$green" "$reset" "$*"; }
+bad() {
+	printf '  %s✗%s %s\n' "$red" "$reset" "$*"
+	fails=$((fails + 1))
+}
+warn() { printf '  %s!%s %s\n' "$yellow" "$reset" "$*"; }
+note() { printf '    %s%s%s\n' "$dim" "$*" "$reset"; }
+
+# A path with every symlink resolved (macOS before 13 has no realpath).
+resolve() {
+	local p=$1 d
+	while [[ -L $p ]]; do
+		d=$(cd -P "$(dirname "$p")" && pwd)
+		p=$(readlink "$p")
+		[[ $p == /* ]] || p=$d/$p
+	done
+	d=$(cd -P "$(dirname "$p")" 2>/dev/null && pwd) || {
+		echo "$1"
+		return
+	}
+	echo "$d/$(basename "$p")"
+}
+
+ghostty_bin() {
+	local c
+	for c in /Applications/Ghostty.app/Contents/MacOS/ghostty "$HOME/Applications/Ghostty.app/Contents/MacOS/ghostty" "$(command -v ghostty 2>/dev/null)"; do
+		[[ -n $c && -x $c ]] && {
+			echo "$c"
+			return 0
+		}
+	done
+	return 1
+}
+
+ghostty_config() {
+	[[ -n ${REVENANT_GHOSTTY_CONFIG:-} ]] && {
+		echo "$REVENANT_GHOSTTY_CONFIG"
+		return
+	}
+	local xdg=${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config
+	local app="$HOME/Library/Application Support/com.mitchellh.ghostty/config"
+	if [[ -f $xdg || ! -f $app ]]; then echo "$xdg"; else echo "$app"; fi
+}
+
+# The account's login shell, which is what tmux runs in a tab. $SHELL can lie: tools that run commands
+# through another shell (IDEs, coding agents) override it.
+login_shell_name() {
+	local s=${REVENANT_SHELL:-}
+	[[ -n $s ]] || s=$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{ print $2 }')
+	[[ -n $s ]] || s=${SHELL:-}
+	echo "${s##*/}"
+}
+
+# The profile a login shell of this kind reads (tmux starts login shells). Fails for a shell without
+# an integration.
+shell_rc() {
+	[[ -n ${REVENANT_RC:-} ]] && {
+		echo "$REVENANT_RC"
+		return 0
+	}
+	local f
+	case $(login_shell_name) in
+	zsh) echo "${ZDOTDIR:-$HOME}/.zshrc" ;;
+	bash)
+		for f in "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile"; do
+			[[ -f $f ]] && {
+				echo "$f"
+				return 0
+			}
+		done
+		echo "$HOME/.bash_profile"
+		;;
+	*) return 1 ;;
+	esac
+}
+
+# The file without our block, and without the blank line install put before it.
+strip_block() {
+	awk -v b="$begin" -v e="$end" '
+		$0 == b { skip = 1; held = 0; next }
+		$0 == e { skip = 0; next }
+		skip    { next }
+		held    { print ""; held = 0 }
+		/^$/    { held = 1; next }
+		        { print }
+		END     { if (held) print "" }' "$1"
+}
+
+# write_block FILE BODY: put BODY between our markers at the end of FILE; an empty BODY removes the
+# block. Prints "unchanged", "changed", or the diff on --dry-run. Backs FILE up before changing it and
+# writes through it, so a symlinked config stays a symlink.
+write_block() {
+	local file=$1 body=$2 tmp
+	[[ -f $file || -n $body ]] || {
+		echo unchanged
+		return 0
+	}
+	tmp=$(mktemp) || return 1
+	[[ -f $file ]] && strip_block "$file" >"$tmp"
+	if [[ -n $body ]]; then
+		[[ -s $tmp ]] && printf '\n' >>"$tmp"
+		printf '%s\n%s\n%s\n' "$begin" "$body" "$end" >>"$tmp"
+	fi
+	if [[ -f $file ]] && cmp -s "$tmp" "$file"; then
+		echo unchanged
+	elif ((dry_run)); then
+		if [[ -f $file ]]; then diff -u "$file" "$tmp" | sed '1,2d; s/^/    /'; else sed 's/^/    + /' "$tmp"; fi
+	else
+		[[ -f $file ]] && cp -p "$file" "$file.revenant-backup-$stamp"
+		mkdir -p "$(dirname "$file")"
+		cat "$tmp" >"$file"
+		echo changed
+	fi
+	rm -f "$tmp"
+}
+
+report() { # label file outcome
+	case $3 in
+	unchanged) ok "$1 already set: $2" ;;
+	changed) ok "$1 updated: $2 (backup: $2.revenant-backup-$stamp)" ;;
+	*)
+		echo "  ~ $1 would change: $2"
+		printf '%s\n' "$3"
+		;;
+	esac
+}
+
+cmd_install() {
+	local conf rc sh body
+	[[ ${1:-} == --dry-run ]] && dry_run=1
+	echo "👻 revenant install$( ((dry_run)) && echo ' (dry run: nothing is written)')"
+	[[ $(uname -s) == Darwin ]] || {
+		bad "revenant needs macOS: a restored tab finds its session through Ghostty's AppleScript API"
+		return 1
+	}
+	case $root in *[[:space:]]*)
+		bad "move the checkout to a path without spaces, Ghostty's \`command =\` cannot take one: $root"
+		return 1
+		;;
+	esac
+	find_tmux >/dev/null || warn "tmux not found: brew install tmux (until then, tabs open plain shells)"
+	ghostty_bin >/dev/null || warn "Ghostty.app not found in /Applications or ~/Applications"
+
+	conf=$(ghostty_config)
+	body="# Every tab runs in its own hidden tmux session, so it survives a Ghostty quit, crash or update.
+# Added by \`revenant install\`; \`revenant uninstall\` removes it.
+command = $libexec/attach
+window-save-state = always
+confirm-close-surface = false"
+	report "Ghostty config" "$conf" "$(write_block "$conf" "$body")"
+
+	sh=$(login_shell_name)
+	if rc=$(shell_rc); then
+		body="[ -r '$root/shell/revenant.$sh' ] && . '$root/shell/revenant.$sh'"
+		report "$sh profile" "$rc" "$(write_block "$rc" "$body")"
+	else
+		warn "no shell integration for ${sh:-your shell} yet: tabs still survive, only tab titles and"
+		note "the directory of a new tab need one (PRs welcome: shell/revenant.<shell>)"
+	fi
+
+	if [[ :$PATH: == *:$bin_dir:* ]]; then
+		if ((dry_run)); then
+			echo "  ~ would link $bin_dir/revenant → $root/revenant"
+		elif [[ -e $bin_dir/revenant && $(resolve "$bin_dir/revenant") != "$root/revenant" ]]; then
+			warn "$bin_dir/revenant exists and is something else: left alone"
+		else
+			ln -sfn "$root/revenant" "$bin_dir/revenant" && ok "revenant on your PATH: $bin_dir/revenant"
+		fi
+	else
+		note "tip: put $root on your PATH, or link $root/revenant into a directory on it"
+	fi
+
+	((dry_run)) && return 0
+	cat <<EOF
+
+  Next: open a new Ghostty tab, or restart Ghostty. Then try the trick:
+    run \`top\` in a tab, quit Ghostty with ⌘Q, open it again. top is still running.
+  The first restored tab may make macOS ask whether it may control Ghostty. Allow it:
+  that is how a tab finds its session again.
+EOF
+}
+
+cmd_uninstall() {
+	local rc conf
+	echo "👻 revenant uninstall"
+	conf=$(ghostty_config)
+	report "Ghostty config" "$conf" "$(write_block "$conf" "")"
+	if rc=$(shell_rc); then report "$(login_shell_name) profile" "$rc" "$(write_block "$rc" "")"; fi
+	if [[ -L $bin_dir/revenant && $(resolve "$bin_dir/revenant") == "$root/revenant" ]]; then
+		rm -f "$bin_dir/revenant" && ok "removed $bin_dir/revenant"
+	fi
+	cat <<EOF
+
+  Restart Ghostty to get plain shells back. Sessions that are running keep running on the
+  tmux socket '$socket', so nothing you started is lost. To end all of them at once:
+    tmux -L $socket kill-server
+EOF
+}
+
+cmd_doctor() {
+	local gb tb v maj min eff save sh rc n ghosts
+	echo "👻 revenant doctor"
+	if [[ $(uname -s) == Darwin ]]; then ok "macOS $(sw_vers -productVersion)"; else bad "not macOS: a restored tab needs Ghostty's AppleScript API"; fi
+
+	if gb=$(ghostty_bin); then ok "$("$gb" +version 2>/dev/null | head -1) ($gb)"; else bad "Ghostty.app not found"; fi
+
+	if tb=$(find_tmux); then
+		v=$("$tb" -V | awk '{ print $2 }')
+		v=${v#next-}
+		maj=${v%%.*} min=${v#*.}
+		min=${min%%[!0-9]*}
+		if ((maj > 3 || (maj == 3 && ${min:-0} >= 3))); then ok "tmux $v ($tb)"; else bad "tmux $v is too old: passthrough needs 3.3+"; fi
+	else
+		bad "tmux not found: brew install tmux"
+	fi
+
+	if [[ -n ${gb:-} ]]; then
+		eff=$("$gb" +show-config 2>/dev/null | sed -n 's/^command = //p' | tail -1)
+		if [[ -n $eff && $(resolve "$eff") == $(resolve "$libexec/attach") ]]; then
+			ok "Ghostty runs revenant for every tab"
+		else
+			bad "Ghostty's command is '${eff:-your default shell}', not revenant: run revenant install"
+		fi
+		save=$("$gb" +show-config 2>/dev/null | sed -n 's/^window-save-state = //p' | tail -1)
+		if [[ $save == always ]]; then ok "Ghostty restores tabs (window-save-state = always)"; else bad "window-save-state = ${save:-default}: Ghostty must restore tabs, set it to always"; fi
+	fi
+
+	sh=$(login_shell_name)
+	if rc=$(shell_rc); then
+		if grep -qF "$root/shell/revenant.$sh" "$rc" 2>/dev/null; then ok "$sh integration loaded from $rc"; else warn "$sh integration missing from $rc: tab titles and cwd stay stale (revenant install)"; fi
+	else
+		warn "no shell integration for ${sh:-your shell}: tabs survive, titles and cwd do not follow"
+	fi
+
+	if [[ -n ${tb:-} ]] && n=$("$tb" -L "$socket" list-sessions 2>/dev/null | wc -l | tr -d ' ') && ((n > 0)); then
+		ghosts=$("$tb" -L "$socket" list-sessions -F '#{session_attached}|#{@revenant_owner}' | while IFS='|' read -r a o; do [[ $a == 0 ]] && ! owner_alive "$o" && echo x; done | wc -l | tr -d ' ')
+		ok "server '$socket' is up: $n sessions, $ghosts of them ghosts waiting for their tab"
+	else
+		note "server '$socket' is not running yet: the first revenant tab starts it"
+	fi
+	[[ -n ${TMUX:-} && -n ${REVENANT:-} ]] && note "this shell itself runs inside revenant"
+
+	if ((fails == 0)); then echo "  All good. Your tabs are haunted. 👻"; else echo "  $fails problem(s) above."; fi
+	((fails == 0))
+}
+
+cmd_status() {
+	local tb rows id attached owner cmd path icon state
+	tb=$(find_tmux) || {
+		echo "tmux not found: brew install tmux" >&2
+		return 1
+	}
+	rows=$("$tb" -L "$socket" list-sessions -F '#{session_id}|#{session_attached}|#{@revenant_owner}|#{pane_current_command}|#{pane_current_path}' 2>/dev/null) || {
+		echo "👻 No revenant server on socket '$socket' yet: the first revenant tab starts it."
+		return 0
+	}
+	echo "👻 revenant · socket '$socket'"
+	echo
+	printf '     %-8s %-6s %-14s %s\n' STATE ID RUNNING WHERE
+	while IFS='|' read -r id attached owner cmd path; do
+		if ((attached > 0)); then
+			icon=🟢 state=tab
+		elif owner_alive "$owner"; then
+			icon=💤 state=closing
+		else
+			icon=👻 state=ghost
+		fi
+		# Claude Code's native install names its binary after its version (…/claude/versions/2.1.326).
+		[[ $cmd =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && cmd=claude
+		printf '  %s %-8s %-6s %-14s %s\n' "$icon" "$state" "$id" "$cmd" "${path/#$HOME/~}"
+	done <<<"$rows"
+	echo
+	note "🟢 tab      attached to an open Ghostty tab"
+	note "💤 closing  its tab was closed; it ends within ${REVENANT_REAP_DELAY:-15}s, like a plain tab would"
+	note "👻 ghost    its Ghostty is gone; the restored tab takes it back, or it is cleaned up"
+	note "            ${REVENANT_RESTORE_WINDOW:-120}s after Ghostty starts. End one now: tmux -L $socket kill-session -t <ID>"
+}
+
+case ${1:-help} in
+install)
+	shift
+	cmd_install "$@"
+	;;
+uninstall) cmd_uninstall ;;
+doctor) cmd_doctor ;;
+status | ls) cmd_status ;;
+help | -h | --help) usage ;;
+*)
+	usage >&2
+	exit 2
+	;;
+esac

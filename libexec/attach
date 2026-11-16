@@ -1,0 +1,65 @@
+#!/bin/bash
+# Ghostty runs this for every tab and split (`command =` in the Ghostty config). Each surface gets its
+# own session on a private tmux server, so whatever runs in it survives a Ghostty quit, crash or update.
+# A session remembers the UUID of its surface, and Ghostty restores tabs with the same UUIDs, so a
+# restored tab re-attaches exactly its own session. A new tab or split never takes over a leftover
+# session: it always starts a fresh one.
+set -u
+
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$here/lib.sh"
+
+login_shell=${SHELL:-/bin/zsh}
+tmux_bin=$(find_tmux) || exec "$login_shell" -l
+socket=${REVENANT_SOCKET:-revenant}
+tmux=("$tmux_bin" -u -L "$socket" -f "$here/tmux.conf")
+# tmux.conf reads it when the server starts, to find ./reap wherever revenant is installed.
+export REVENANT_LIBEXEC=$here
+
+case "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" in
+*[Uu][Tt][Ff]-8* | *[Uu][Tt][Ff]8*) ;;
+*) export LANG=en_US.UTF-8 ;;
+esac
+
+pid=$PPID
+while [[ -n $pid ]] && ((pid > 1)) && ! is_ghostty "$pid"; do
+	pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+done
+is_ghostty "$pid" || exec "$login_shell" -l
+owner=$(owner_id "$pid")
+tty=$(tty 2>/dev/null) || tty=
+
+# Sessions whose Ghostty is gone, waiting for their restored surfaces.
+orphans=$("${tmux[@]}" list-sessions -F '#{session_id}|#{session_attached}|#{@revenant_owner}|#{@revenant_uuid}' 2>/dev/null |
+	while IFS='|' read -r id attached session_owner uuid; do
+		[[ $attached == 0 && -n $uuid ]] && ! owner_alive "$session_owner" && echo "$id|$uuid"
+	done)
+
+uuid=
+[[ -n $orphans && -n $tty ]] && uuid=$("$here/surface-id" "$tty" 50)
+
+if [[ -n $uuid ]]; then
+	target=$(awk -F'|' -v u="$uuid" '$2 == u { print $1; exit }' <<<"$orphans")
+	[[ -n $target ]] && exec "${tmux[@]}" set-option -t "$target" @revenant_owner "$owner" \; attach-session -t "$target"
+fi
+
+# In the background, so a new tab's prompt does not wait: learn this surface's UUID if it is still
+# unknown (AppleScript is slow), then clear out leftover sessions that nothing will claim any more.
+(
+	exec </dev/null >/dev/null 2>&1
+	if [[ -z $uuid && -n $tty ]] && uuid=$("$here/surface-id" "$tty" 50); then
+		for _ in {1..25}; do
+			session=$("${tmux[@]}" list-clients -F '#{client_tty}|#{session_id}' | awk -F'|' -v t="$tty" '$1 == t { print $2; exit }')
+			[[ -n $session ]] && {
+				"${tmux[@]}" set-option -t "$session" @revenant_uuid "$uuid"
+				break
+			}
+			sleep 0.2
+		done
+	fi
+	gc_orphans "$pid" "${tmux[@]}"
+) &
+
+new=(new-session -c "$PWD" \; set-option @revenant_owner "$owner")
+[[ -n $uuid ]] && new+=(\; set-option @revenant_uuid "$uuid")
+exec "${tmux[@]}" "${new[@]}"

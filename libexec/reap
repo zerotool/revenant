@@ -1,0 +1,29 @@
+#!/bin/bash
+# client-detached hook. A tab closed on purpose leaves its session unattached while Ghostty keeps
+# running, so after a delay every session still in that state dies like a plain tab would. If Ghostty
+# is gone by then, it was a quit or crash, and the sessions wait for their restored tabs.
+# It sweeps all sessions because #{hook_session_name} is not the closed tab's session: tmux resolves
+# it to the most recently used one.
+socket_path=$1
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$here/lib.sh"
+tmux_bin=$(find_tmux) || exit 0
+tmux=("$tmux_bin" -S "$socket_path")
+
+closed() {
+	"${tmux[@]}" list-sessions -F '#{session_id}|#{session_attached}|#{@revenant_owner}' 2>/dev/null |
+		while IFS='|' read -r id attached owner; do
+			[[ $attached == 0 ]] && owner_alive "$owner" && echo "$id|$owner"
+		done
+}
+
+before=$(closed)
+[[ -n $before ]] || exit 0
+sleep "${REVENANT_REAP_DELAY:-15}"
+
+closed | while IFS='|' read -r id owner; do
+	grep -qxF "$id|$owner" <<<"$before" || continue
+	"${tmux[@]}" if-shell -F -t "$id" "#{&&:#{==:#{session_attached},0},#{==:#{@revenant_owner},$owner}}" "kill-session -t '$id'"
+done
+
+gc_orphans "$(pgrep -x ghostty | head -1)" "${tmux[@]}"

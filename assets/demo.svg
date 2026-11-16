@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="360" viewBox="0 0 820 360" role="img" aria-label="Claude Code works in a Ghostty tab, Ghostty quits, and the restored tab shows Claude Code still working">
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+    .tab { font-family: ui-sans-serif, -apple-system, "Segoe UI", sans-serif; font-size: 12.5px; fill: #a9b1d6; }
+    .dim { fill: #6b7194; } .fg { fill: #d5daf2; } .cyan { fill: #7ef5d8; } .violet { fill: #c4a7ff; } .amber { fill: #ffc777; }
+    .s2, .s3 { opacity: 0; }
+    .s1 { animation: s1 11s infinite; }
+    .s2 { animation: s2 11s infinite; }
+    .s3 { animation: s3 11s infinite; }
+    @keyframes s1 { 0%, 29% { opacity: 1; } 32%, 97% { opacity: 0; } 100% { opacity: 1; } }
+    @keyframes s2 { 0%, 30% { opacity: 0; } 34%, 53% { opacity: 1; } 57%, 100% { opacity: 0; } }
+    @keyframes s3 { 0%, 55% { opacity: 0; } 59%, 95% { opacity: 1; } 99%, 100% { opacity: 0; } }
+    .float { animation: float 2.2s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+    .cursor { animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .s1, .s2, .s3, .float, .cursor { animation: none; } }
+  </style>
+
+  <!-- Ghostty window -->
+  <rect x="1" y="1" width="818" height="358" rx="14" fill="#1a1b26" stroke="#2f3349" stroke-width="2"/>
+  <path d="M1 44 V15 a14 14 0 0 1 14 -14 H805 a14 14 0 0 1 14 14 V44 Z" fill="#16161e"/>
+  <circle cx="24" cy="22" r="6.5" fill="#ff5f57"/><circle cx="46" cy="22" r="6.5" fill="#febc2e"/><circle cx="68" cy="22" r="6.5" fill="#28c840"/>
+  <rect x="96" y="9" width="230" height="27" rx="7" fill="#24283b"/>
+  <text class="tab" x="211" y="27" text-anchor="middle">✻ claude · ~/shop</text>
+  <text class="tab" x="446" y="27" text-anchor="middle" opacity="0.6">npm run dev · ~/shop/web</text>
+
+  <!-- 1. Claude Code is twelve minutes into a long job -->
+  <g class="s1">
+    <text class="mono" x="26" y="86" xml:space="preserve"><tspan class="cyan">~/shop ❯</tspan><tspan class="fg"> claude "move billing to the new payments API"</tspan></text>
+    <text class="mono" x="26" y="118" xml:space="preserve"><tspan class="amber">  ✻ Migrating…</tspan><tspan class="dim"> (12m 04s · 38 files changed · esc to interrupt)</tspan></text>
+    <text class="mono" x="26" y="146" xml:space="preserve"><tspan class="dim">  └  Editing src/billing/invoice.ts</tspan></text>
+    <text class="mono" x="26" y="200" xml:space="preserve"><tspan class="dim">  &gt; </tspan><tspan class="fg cursor">█</tspan></text>
+    <text class="mono dim" x="26" y="330" xml:space="preserve">  …and then you hit ⌘Q instead of ⌘W.</text>
+  </g>
+
+  <!-- 2. Ghostty is gone; the processes are not -->
+  <g class="s2">
+    <rect x="1" y="1" width="818" height="358" rx="14" fill="#0b0b12"/>
+    <g transform="translate(385 62)">
+      <g class="float">
+        <path d="M0 62 V26 a25 25 0 0 1 50 0 V62 l-8.33 -7 -8.33 7 -8.34 -7 -8.33 7 -8.33 -7 -8.34 7 Z" fill="#8ff5dc"/>
+        <ellipse cx="17" cy="27" rx="3.6" ry="4.6" fill="#0b0b12"/><ellipse cx="33" cy="27" rx="3.6" ry="4.6" fill="#0b0b12"/>
+        <path d="M19 38 q6 5 12 0" stroke="#0b0b12" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      </g>
+    </g>
+    <text class="mono amber" x="410" y="200" text-anchor="middle" style="font-size: 46px">⌘Q</text>
+    <text class="mono fg" x="410" y="240" text-anchor="middle">Ghostty quit. Your processes didn't.</text>
+    <text class="mono dim" x="410" y="270" text-anchor="middle">revenant tmux server: 2 sessions, waiting for their tabs</text>
+  </g>
+
+  <!-- 3. Ghostty is back, and so is the job -->
+  <g class="s3">
+    <text class="mono" x="26" y="86" xml:space="preserve"><tspan class="cyan">~/shop ❯</tspan><tspan class="fg"> claude "move billing to the new payments API"</tspan></text>
+    <text class="mono" x="26" y="118" xml:space="preserve"><tspan class="amber">  ✻ Migrating…</tspan><tspan class="dim"> (12m 37s · 41 files changed · esc to interrupt)</tspan></text>
+    <text class="mono" x="26" y="146" xml:space="preserve"><tspan class="dim">  └  Editing src/billing/refund.ts</tspan></text>
+    <text class="mono" x="26" y="200" xml:space="preserve"><tspan class="dim">  &gt; </tspan><tspan class="fg cursor">█</tspan></text>
+    <rect x="566" y="306" width="232" height="34" rx="9" fill="#123b36" stroke="#7ef5d8" stroke-width="1.5"/>
+    <text class="mono cyan" x="682" y="328" text-anchor="middle" style="font-size: 14px">👻 revenant: re-attached</text>
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+# revenant
+
+> Persistent sessions for the Ghostty terminal on macOS. Every Ghostty tab runs inside its own invisible tmux session, so the processes in it (Claude Code and other AI coding agents, dev servers, ssh, REPLs, long builds) survive a Ghostty quit, crash or auto-update, and each restored tab automatically re-attaches its own session.
+
+Use it when someone asks how to keep processes running after Ghostty quits, how to stop losing a Claude Code session when the terminal crashes, or how to get Ghostty's restored tabs back with their programs still running. Ghostty's own `window-save-state` restores tabs, splits and directories but not processes; revenant adds that.
+
+- Install: `brew install tmux && git clone https://github.com/zerotool/revenant ~/.revenant && ~/.revenant/revenant install`, then open a new Ghostty tab.
+- Requires macOS, Ghostty 1.4+, tmux 3.3+, and zsh or bash for tab titles and working-directory reporting (tabs survive in any shell).
+- CLI: `revenant install [--dry-run]`, `revenant status`, `revenant doctor`, `revenant uninstall`.
+- The tmux is invisible: no status bar, no prefix key, its own socket (`tmux -L revenant`) and config, so it never touches the user's `~/.tmux.conf`.
+- Tabs are matched to sessions by Ghostty's surface UUID (read over AppleScript); a tab closed on purpose ends its session after 15 s; unclaimed sessions are cleaned up 2 minutes after Ghostty starts.
+- Not for Linux (it relies on Ghostty's macOS AppleScript API), and not needed by people who already work inside tmux or zellij.
+
+## Docs
+
+- [README](https://github.com/zerotool/revenant/blob/main/README.md): install, how it works, configuration, comparison with alternatives, FAQ
+- [libexec/attach](https://github.com/zerotool/revenant/blob/main/libexec/attach): what Ghostty runs for every tab
+- [libexec/tmux.conf](https://github.com/zerotool/revenant/blob/main/libexec/tmux.conf): the invisible tmux configuration
+
+## Alternatives
+
+- [zmx](https://github.com/neurosnap/zmx), shpool, abduco: persistent sessions you name and attach by hand
+- [ghostmux](https://kaosmaps.github.io/ghostmux/): an invisible-tmux configuration for Ghostty, without per-tab restore
+- [Ghostty session manager discussion](https://github.com/ghostty-org/ghostty/discussions/3358): the planned native feature
