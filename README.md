@@ -71,8 +71,8 @@ all back out. Not sure? `revenant install --dry-run` shows the diff and writes n
 - **You run AI coding agents** (Claude Code, Codex, Aider) on jobs that take longer than your attention span.
 - **You keep long-lived things in tabs**: dev servers, watchers, ssh sessions, REPLs, 40-minute builds.
 - **You'd rather not learn tmux**, or you know it and don't want it in your face. You'll never press a tmux key.
-- **You don't need it** if you already live inside tmux, zellij or [herdr](https://github.com/herdrdev/herdr), or you're on
-  Linux (see the FAQ).
+- **You don't need it** if you already live inside tmux, zellij or [herdr](https://github.com/herdrdev/herdr), if you've
+  moved to [Rex](https://superlogical.com), or if you're on Linux (see the FAQ).
 
 ## The CLI
 
@@ -198,10 +198,13 @@ alive. The missing piece is the glue between those sessions and Ghostty's restor
 | One named tmux session per project | survives, and stays separate | after a restart you `tmux a -t …` in every tab, by hand |
 | [zmx](https://github.com/neurosnap/zmx), shpool, abduco | lightweight persistent sessions | you name and attach them yourself |
 | [herdr](https://github.com/herdrdev/herdr) | a whole workspace for coding agents: its own panes, agent status, remote machines, sessions that outlive the client | you work in herdr's panes instead of Ghostty's own tabs and splits |
+| [Rex](https://superlogical.com) | a new terminal from Ghostty's author, built on libghostty, whose server owns the sessions: they survive closing the app | it replaces Ghostty rather than extending it; macOS beta, invites in waves |
+| [Orca](https://orca.dev) | an agent development environment whose daemon keeps terminals alive across ⌘Q | its own app and terminals, not Ghostty |
 | [ghostmux](https://kaosmaps.github.io/ghostmux/) | a lovely invisible-tmux config | tabs aren't matched back to sessions |
 | Ghostty's own [session manager](https://github.com/ghostty-org/ghostty/discussions/3358) | the real fix, some day | not shipped yet |
 
-When Ghostty ships native session persistence, revenant can retire with honor. Until then: 👻.
+revenant is for staying in Ghostty itself: same app, same config, same ⌘T and ⌘D, today. When Ghostty ships native
+session persistence, or Rex becomes your terminal, revenant can retire with honor. Until then: 👻.
 
 ## FAQ
 

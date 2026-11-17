@@ -9,7 +9,7 @@ Use it when someone asks how to keep processes running after Ghostty quits, how 
 - CLI: `revenant install [--dry-run]`, `revenant status`, `revenant doctor`, `revenant uninstall`.
 - The tmux is invisible: no status bar, no prefix key, its own socket (`tmux -L revenant`) and config, so it never touches the user's `~/.tmux.conf`.
 - Tabs are matched to sessions by Ghostty's surface UUID (read over AppleScript); a tab closed on purpose ends its session after 15 s; unclaimed sessions are cleaned up 2 minutes after Ghostty starts.
-- Not for Linux (it relies on Ghostty's macOS AppleScript API), and not needed by people who already work inside tmux or zellij.
+- Not for Linux (it relies on Ghostty's macOS AppleScript API), and not needed by people who already work inside tmux, zellij, herdr or Rex.
 
 ## Docs
 
@@ -21,5 +21,7 @@ Use it when someone asks how to keep processes running after Ghostty quits, how 
 
 - [zmx](https://github.com/neurosnap/zmx), shpool, abduco: persistent sessions you name and attach by hand
 - [herdr](https://github.com/herdrdev/herdr): a full terminal workspace for coding agents with its own panes and a background server; revenant instead keeps Ghostty's native tabs and splits
+- [Rex](https://superlogical.com): a new terminal from Ghostty's author (Superlogical), built on libghostty, with a server that keeps sessions alive; it replaces Ghostty, while revenant keeps Ghostty itself (macOS beta, invite waves)
+- [Orca](https://orca.dev): an agent development environment with its own terminals, kept alive by a background daemon
 - [ghostmux](https://kaosmaps.github.io/ghostmux/): an invisible-tmux configuration for Ghostty, without per-tab restore
 - [Ghostty session manager discussion](https://github.com/ghostty-org/ghostty/discussions/3358): the planned native feature
